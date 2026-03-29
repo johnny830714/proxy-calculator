@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>代購報價計算器</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F5F2EC;
+    --surface: #FFFFFF;
+    --surface2: #EDEAE2;
+    --text: #1A1916;
+    --text-muted: #7A7770;
+    --text-hint: #B0ADA6;
+    --accent: #C0392B;
+    --accent-light: #FAE9E7;
+    --accent-dark: #962D23;
+    --gold: #D4820A;
+    --gold-light: #FDF3E3;
+    --border: rgba(26,25,22,0.10);
+    --border-strong: rgba(26,25,22,0.18);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 48px 16px 64px;
+  }
+
+  .page { width: 100%; max-width: 520px; }
+
+  header { margin-bottom: 40px; }
+  .header-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .header-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text-hint);
+    margin-bottom: 20px;
+  }
+
+  .field { margin-bottom: 20px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .input-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .input-wrap:focus-within {
+    border-color: var(--accent);
+  }
+  .input-wrap input[type=number] {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 11px 14px;
+    font-size: 16px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--text);
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .input-wrap input[type=number]::-webkit-outer-spin-button,
+  .input-wrap input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .input-unit {
+    padding: 0 14px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-hint);
+    border-left: 1px solid var(--border);
+    height: 44px;
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    white-space: nowrap;
+  }
+
+  .slider-wrap { display: flex; align-items: center; gap: 14px; }
+  input[type=range] {
+    flex: 1;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--surface2);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--accent);
+    cursor: pointer;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--accent);
+    cursor: pointer;
+  }
+  .slider-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 28px 0;
+  }
+
+  .breakdown { margin-bottom: 24px; }
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 14px;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-key { color: var(--text-muted); }
+  .breakdown-val {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .breakdown-val.accent { color: var(--accent); }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-top: 8px;
+  }
+  .total-label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+  .total-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .suggest-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .suggest-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 12px;
+    text-align: center;
+    background: var(--surface);
+    transition: border-color 0.15s;
+  }
+  .suggest-item.featured {
+    border: 2px solid var(--accent);
+    background: var(--accent-light);
+  }
+  .suggest-badge {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 2px 7px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .suggest-tier {
+    font-size: 11px;
+    color: var(--text-hint);
+    margin-bottom: 6px;
+  }
+  .suggest-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .suggest-item.featured .suggest-price { color: var(--accent-dark); }
+  .suggest-profit {
+    font-size: 11px;
+    color: var(--text-hint);
+  }
+
+  .rate-toggle {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .rate-btn {
+    flex: 1;
+    padding: 9px 0;
+    font-size: 13px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 500;
+    background: var(--surface2);
+    color: var(--text-muted);
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .rate-btn + .rate-btn { border-left: 1px solid var(--border-strong); }
+  .rate-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .rate-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+  }
+  .rate-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .refresh-btn {
+    font-size: 12px;
+    font-family: 'Noto Sans TC', sans-serif;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 5px 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .refresh-btn:hover { background: var(--surface); }
+  .refresh-btn:disabled { opacity: 0.5; cursor: default; }
+  .rate-meta {
+    font-size: 11px;
+    color: var(--text-hint);
+    margin-top: 5px;
+    min-height: 16px;
+  }
+
+  .footer-note {
+    font-size: 12px;
+    color: var(--text-hint);
+    text-align: center;
+    margin-top: 28px;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 400px) {
+    .suggest-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="header-eyebrow">代購報價工具</div>
+    <h1>售價計算器</h1>
+    <p class="header-sub">輸入原商品定價與代購費率，自動推算建議售價與毛利空間。</p>
+  </header>
+
+  <div class="card">
+    <div class="card-title">商品資訊</div>
+
+    <div class="field">
+      <label>原商品定價</label>
+      <div class="input-wrap">
+        <input type="number" id="original" value="3300" min="0" step="1" />
+        <span class="input-unit">¥ 日圓</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>代購服務費（原價 × %）</label>
+      <div class="slider-wrap">
+        <input type="range" id="pct-slider" min="5" max="60" value="30" step="1" />
+        <span class="slider-value" id="pct-out">30%</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>運費分攤（選填）</label>
+      <div class="input-wrap">
+        <input type="number" id="shipping" value="0" min="0" step="10" />
+        <span class="input-unit">NT$ 台幣</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>匯率（¥1 = NT$）</label>
+      <div class="rate-toggle">
+        <button class="rate-btn active" id="btn-auto" onclick="setRateMode('auto')">即時匯率</button>
+        <button class="rate-btn" id="btn-manual" onclick="setRateMode('manual')">自行輸入</button>
+      </div>
+      <div id="rate-auto-wrap" style="margin-top:10px;">
+        <div class="rate-status-row">
+          <span class="rate-display" id="rate-display">— 載入中…</span>
+          <button class="refresh-btn" id="refresh-btn" onclick="fetchRate()">重新整理</button>
+        </div>
+        <div class="rate-meta" id="rate-meta"></div>
+      </div>
+      <div id="rate-manual-wrap" style="margin-top:10px; display:none;">
+        <div class="input-wrap">
+          <input type="number" id="rate-manual" value="0.22" min="0.01" step="0.001" />
+          <span class="input-unit">NT$ / ¥</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">成本試算</div>
+
+    <div class="breakdown">
+      <div class="breakdown-row">
+        <span class="breakdown-key">原商品</span>
+        <span class="breakdown-val" id="r-orig">¥3,300 ≈ NT$726</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">代購服務費</span>
+        <span class="breakdown-val accent" id="r-fee">¥990 ≈ NT$218</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">運費分攤</span>
+        <span class="breakdown-val" id="r-ship">NT$0</span>
+      </div>
+    </div>
+
+    <div class="total-row">
+      <span class="total-label">總進貨成本</span>
+      <span class="total-value" id="r-total">NT$944</span>
+    </div>
+
+    <div class="suggest-grid">
+      <div class="suggest-item">
+        <div class="suggest-tier">保守定價</div>
+        <div class="suggest-price" id="s-low">NT$1,151</div>
+        <div class="suggest-profit" id="sp-low">毛利 NT$207</div>
+      </div>
+      <div class="suggest-item featured">
+        <div class="suggest-badge">推薦</div>
+        <div class="suggest-tier">適中定價</div>
+        <div class="suggest-price" id="s-mid">NT$1,303</div>
+        <div class="suggest-profit" id="sp-mid">毛利 NT$359</div>
+      </div>
+      <div class="suggest-item">
+        <div class="suggest-tier">限定溢價</div>
+        <div class="suggest-price" id="s-high">NT$1,501</div>
+        <div class="suggest-profit" id="sp-high">毛利 NT$557</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">建議售價以進貨成本 +22% / +38% / +59% 估算<br>實際定價請依市場行情與平台手續費調整</p>
+
+</div>
+
+<script>
+function fmt(n) { return Math.round(n).toLocaleString('zh-TW'); }
+
+let currentRate = 0.22;
+let rateMode = 'auto';
+
+function setRateMode(mode) {
+  rateMode = mode;
+  document.getElementById('btn-auto').classList.toggle('active', mode === 'auto');
+  document.getElementById('btn-manual').classList.toggle('active', mode === 'manual');
+  document.getElementById('rate-auto-wrap').style.display = mode === 'auto' ? 'block' : 'none';
+  document.getElementById('rate-manual-wrap').style.display = mode === 'manual' ? 'block' : 'none';
+  if (mode === 'auto') fetchRate();
+  else calc();
+}
+
+async function fetchRate() {
+  const btn = document.getElementById('refresh-btn');
+  const display = document.getElementById('rate-display');
+  const meta = document.getElementById('rate-meta');
+  btn.disabled = true;
+  btn.textContent = '取得中…';
+  display.textContent = '— 載入中…';
+  meta.textContent = '';
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/JPY');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.result !== 'success') throw new Error('API error');
+    const rate = data.rates.TWD;
+    currentRate = parseFloat(rate.toFixed(4));
+    display.textContent = '¥1 = NT$' + currentRate;
+    const now = new Date();
+    meta.textContent = '更新時間：' + now.toLocaleTimeString('zh-TW') + '　資料來源：open.er-api.com';
+    calc();
+  } catch(e) {
+    display.textContent = '無法取得，請改用手動輸入';
+    meta.textContent = '請切換至「自行輸入」模式';
+  }
+  btn.disabled = false;
+  btn.textContent = '重新整理';
+}
+
+function getRate() {
+  if (rateMode === 'auto') return currentRate;
+  return parseFloat(document.getElementById('rate-manual').value) || 0.22;
+}
+
+function calc() {
+  const orig = parseFloat(document.getElementById('original').value) || 0;
+  const pct  = parseFloat(document.getElementById('pct-slider').value) || 0;
+  const ship = parseFloat(document.getElementById('shipping').value) || 0;
+  const rate = getRate();
+
+  document.getElementById('pct-out').textContent = pct + '%';
+
+  const feeJpy   = orig * (pct / 100);
+  const totalJpy = orig + feeJpy;
+  const totalTwd = totalJpy * rate + ship;
+
+  document.getElementById('r-orig').textContent  = '¥' + fmt(orig) + ' ≈ NT$' + fmt(orig * rate);
+  document.getElementById('r-fee').textContent   = '¥' + fmt(feeJpy) + ' ≈ NT$' + fmt(feeJpy * rate);
+  document.getElementById('r-ship').textContent  = 'NT$' + fmt(ship);
+  document.getElementById('r-total').textContent = 'NT$' + fmt(totalTwd);
+
+  const low  = totalTwd * 1.22;
+  const mid  = totalTwd * 1.38;
+  const high = totalTwd * 1.59;
+
+  document.getElementById('s-low').textContent  = 'NT$' + fmt(low);
+  document.getElementById('sp-low').textContent = '毛利 NT$' + fmt(low - totalTwd);
+  document.getElementById('s-mid').textContent  = 'NT$' + fmt(mid);
+  document.getElementById('sp-mid').textContent = '毛利 NT$' + fmt(mid - totalTwd);
+  document.getElementById('s-high').textContent = 'NT$' + fmt(high);
+  document.getElementById('sp-high').textContent= '毛利 NT$' + fmt(high - totalTwd);
+}
+
+['original','shipping'].forEach(id =>
+  document.getElementById(id).addEventListener('input', calc));
+document.getElementById('pct-slider').addEventListener('input', calc);
+document.getElementById('rate-manual').addEventListener('input', calc);
+
+fetchRate();
+</script>
+</body>
+</html>
